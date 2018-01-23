@@ -1,0 +1,19 @@
+[
+  [{
+    "uid": "e7724f3b-d381-48e5-aed3-fcb7c1d81a63",
+    "name": "My Little Pony",
+    "countries": ["RUS", "JPN", "GBP"],
+    "click": 132,
+    "payout": {
+      "currency": "USD",
+      "amount": 10.00
+    }
+  }],
+  [{
+    "id": "d54adab2-b4af-48bf-afd8-52438b6e912d",
+    "name": "Pickle Rick!!",
+    "country": "CN",
+    "conversions": 10,
+    "points": 3867
+  }]
+]
