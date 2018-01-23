@@ -7,13 +7,15 @@
     "payout": {
       "currency": "USD",
       "amount": 10.00
-    }
+    },
+    "platform": "iOS"
   }],
   [{
     "id": "d54adab2-b4af-48bf-afd8-52438b6e912d",
     "name": "Pickle Rick!!",
     "country": "CN",
     "conversions": 10,
-    "points": 3867
+    "points": 3867,
+    "platform": "Android"
   }]
 ]
