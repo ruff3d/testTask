@@ -2,6 +2,7 @@
 
 namespace TestTask\Service;
 
+use PHPUnit\Runner\Exception;
 use TestTask\Entity\Offer;
 
 class ApplicationParser {
@@ -56,7 +57,12 @@ class ApplicationParser {
 		$offer['payout'] = $amount * $points * $this->price;
 
 		$offer['countries'] = array_map( function ($country) {
-			return $this->alpha->alpha3($country)['alpha2'];
+			try {
+				$a2 = $this->alpha->alpha3($country);
+			} catch (\League\ISO3166\Exception\OutOfBoundsException $e) {
+				return '';
+			}
+			return $a2['alpha3'];
 		}, $offer['countries']);
 
 		return (new Offer())
@@ -64,7 +70,6 @@ class ApplicationParser {
 			->setCountries( $offer['countries'])
 			->setPayout( $offer['payout'])
 			->setPlatform( $offer['platform']);
-
 	}
 
 }
