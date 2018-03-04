@@ -16,7 +16,7 @@ class ApiDataController extends Controller
     public function index()
     {
         $response = json_decode(file_get_contents(__DIR__ . '/apiResource/data.json'));
-
+//        var_dump( $response);
         return $this->json($response);
     }
 }
