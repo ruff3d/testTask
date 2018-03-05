@@ -2,7 +2,8 @@
 
 namespace TestTask\Service;
 
-use PHPUnit\Runner\Exception;
+use League\ISO3166\Exception\OutOfBoundsException;
+use League\ISO3166\ISO3166;
 use TestTask\Entity\Offer;
 
 class ApplicationParser {
@@ -17,59 +18,63 @@ class ApplicationParser {
 	}
 
 	public function __construct() {
-		$this->alpha = new \League\ISO3166\ISO3166;
+		$this->alpha = new ISO3166();
 	}
 
 	public function parse( $data ): Offer {
-		$parsedData = json_decode( $data );
+		$parsedData = json_decode( $data,true );
 		if ( empty( $parsedData ) && !is_array( $parsedData ) ) {
 			throw new \Exception( 'Wrong request data' );
 		}
-		$offer = [];
-		foreach ( $parsedData as $pdd ) {
-			foreach ( $pdd as $pd ) {
-				foreach ( $pd as $key => $value ) {
-					switch ( $key ) {
-						case 'uid'      :
-							$offer['application_id'] = $value;
-							break;
-						case 'countries':
-							$offer['countries'] = $value;
-							break;
-						case 'payout'   :
-							$amount = ( is_array( $value ) && isset( $value['amount'] ) ) ? $value['amount'] : 0;
-							break;
-						case 'platform' :
-							$offer['platform'] = $offer['platform'] ?? $value;
-							break;
-						case 'points'   :
-							$points = $value;
-							break;
-					}
-				}
-			}
-		}
+
+		$offer = $this->getValues( $parsedData );
 
 		if ( !isset( $amount ) && !isset( $points ) ) {
 			throw new \Exception( 'Empty amount/points' );
 		}
 
-		$offer['payout'] = $amount * $points * $this->price;
+		$offer['payout'] = $amount * $points / $this->price;
 
-		$offer['countries'] = array_map( function ($country) {
+		$offer['countries'] = array_map( function ( $country ) {
 			try {
-				$a2 = $this->alpha->alpha3($country);
-			} catch (\League\ISO3166\Exception\OutOfBoundsException $e) {
+				$a2 = $this->alpha->alpha3( $country );
+			} catch ( OutOfBoundsException $e ) {
 				return '';
 			}
-			return $a2['alpha3'];
-		}, $offer['countries']);
 
-		return (new Offer())
-			->setApplicationId( $offer['application_id'])
-			->setCountries( $offer['countries'])
-			->setPayout( $offer['payout'])
-			->setPlatform( $offer['platform']);
+			return $a2['alpha3'];
+		}, $offer['countries'] );
+
+		return ( new Offer() )
+			->setApplicationId( $offer['application_id'] )
+			->setCountries( $offer['countries'] )
+			->setPayout( $offer['payout'] )
+			->setPlatform( $offer['platform'] );
+	}
+
+	public function getValues( $data ) {
+		static $offer;
+		foreach ($data as $key => $value) {
+			if ( is_array($value)) $this->getValues($value);
+			switch ( $key ) {
+				case 'uid'      :
+					$offer['application_id'] = $value;
+					break;
+				case 'countries':
+					$offer['countries'] = $value;
+					break;
+				case 'payout'   :
+					$offer['amount'] = isset( $value['amount']  ) ? $value['amount'] : 0.0;
+					break;
+				case 'platform' :
+					$offer['platform'] = $offer['platform'] ?? $value;
+					break;
+				case 'points'   :
+					$offer['points'] = $value;
+					break;
+			}
+		}
+		return $offer;
 	}
 
 }

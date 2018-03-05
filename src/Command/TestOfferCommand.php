@@ -25,7 +25,10 @@ class TestOfferCommand extends Command
 	{
 		$this->parser = $parser;
 		$this->em = $em;
-		$this->client = new GuzzleHttp\Client();
+		$this->client = new GuzzleHttp\Client(['headers' => [
+				'User-Agent' => 'testing/1.0',
+				'Accept'     => 'application/json',
+			]]);
 		parent::__construct();
 	}
 
@@ -33,8 +36,7 @@ class TestOfferCommand extends Command
     {
         $this
             ->setDescription('Creates new Offer from response')
-            ->addArgument('format', InputArgument::OPTIONAL, 'Response format (json/xml)')
-            ->addOption('url', null, InputOption::VALUE_OPTIONAL, 'Option description')
+            ->addOption('url', null, InputOption::VALUE_OPTIONAL, 'Desired host')
         ;
 
 
@@ -44,15 +46,10 @@ class TestOfferCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
-        $format = $input->getArgument('format') ?: 'json';
-        if ($format) {
-            $io->note(sprintf('Chosen format: %s', $format));
-            $this->parser->setFormat($format);
-        }
 
 	    $url = $input->getOption('url') ?: 'http://localhost:8000';
 
-	    $response = $this->client->request('GET',$url.'/api/data');
+	    $response = $this->client->get($url.'/api/data');
 
 	    if ($response->getStatusCode() == 200){
 	        	try {

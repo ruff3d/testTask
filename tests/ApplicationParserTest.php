@@ -20,9 +20,25 @@ class ApplicationParserTest extends TestCase
 	    } catch (Exception $e){
 	    	echo $e->getMessage();
 	    }
+
         $this->assertCount(3,$offer->getCountries());
-//        $this->assertEquals(10,$offer->getPayout());
+        $this->assertEquals(77.34,$offer->getPayout());
         $this->assertEquals('iOS',$offer->getPlatform());
     }
+
+	public function testRec()
+	{
+		$data = file_get_contents( __DIR__ . '/../src/Controller/apiResource/data.json');
+		$parser = new ApplicationParser();
+		
+		$res = $parser->getValues(json_decode($data, true));
+
+		$this->assertCount(3,$res['countries']);
+//		$this->assertEquals(77.34,$offer->getPayout());
+//		$this->assertEquals('iOS',$offer->getPlatform());
+
+	}
+    
+    
 
 }
