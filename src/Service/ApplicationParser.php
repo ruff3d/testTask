@@ -7,33 +7,47 @@ use League\ISO3166\ISO3166;
 use TestTask\Entity\Offer;
 
 class ApplicationParser {
+	/**
+	 * Country converter
+	 * @var ISO3166
+	 */
 	private $alpha;
+	/**
+	 * USD to Points
+	 * @var int
+	 */
 	private $price = 500;
 
 	/**
 	 * @param int $price
+	 *
+	 * @return ApplicationParser
 	 */
-	public function setPrice( int $price ): void {
+	public function setPrice( int $price ): ApplicationParser
+	{
 		$this->price = $price;
+		return $this;
 	}
 
-	public function __construct() {
+	public function __construct()
+	{
 		$this->alpha = new ISO3166();
 	}
 
-	public function parse( $data ): Offer {
+	public function parse( $data ): Offer
+	{
 		$parsedData = json_decode( $data,true );
 		if ( empty( $parsedData ) && !is_array( $parsedData ) ) {
 			throw new \Exception( 'Wrong request data' );
 		}
 
-		$offer = $this->getValues( $parsedData );
+		$offer = self::getValues( $parsedData );
 
-		if ( !isset( $amount ) && !isset( $points ) ) {
+		if ( !isset( $offer['amount']) && !isset( $offer['points'] ) ) {
 			throw new \Exception( 'Empty amount/points' );
 		}
 
-		$offer['payout'] = $amount * $points / $this->price;
+		$offer['payout'] = $offer['amount'] * $offer['points'] / $this->price;
 
 		$offer['countries'] = array_map( function ( $country ) {
 			try {
@@ -42,7 +56,7 @@ class ApplicationParser {
 				return '';
 			}
 
-			return $a2['alpha3'];
+			return $a2['alpha2'];
 		}, $offer['countries'] );
 
 		return ( new Offer() )
@@ -52,10 +66,13 @@ class ApplicationParser {
 			->setPlatform( $offer['platform'] );
 	}
 
-	public function getValues( $data ) {
+	public static function getValues( $data ): array
+	{
 		static $offer;
 		foreach ($data as $key => $value) {
-			if ( is_array($value)) $this->getValues($value);
+			if ( is_array($value) && !is_string($key)) {
+				self::getValues($value); continue;
+			}
 			switch ( $key ) {
 				case 'uid'      :
 					$offer['application_id'] = $value;
@@ -64,7 +81,7 @@ class ApplicationParser {
 					$offer['countries'] = $value;
 					break;
 				case 'payout'   :
-					$offer['amount'] = isset( $value['amount']  ) ? $value['amount'] : 0.0;
+					$offer['amount'] = $value['amount'] ?? 0.0;
 					break;
 				case 'platform' :
 					$offer['platform'] = $offer['platform'] ?? $value;
@@ -72,9 +89,12 @@ class ApplicationParser {
 				case 'points'   :
 					$offer['points'] = $value;
 					break;
+				default :
+					continue;
 			}
 		}
 		return $offer;
 	}
+
 
 }

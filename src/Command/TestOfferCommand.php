@@ -53,7 +53,9 @@ class TestOfferCommand extends Command
 
 	    if ($response->getStatusCode() == 200){
 	        	try {
-	    	         $offer = $this->parser->parse($response->getBody());
+	    	         $offer = $this->parser
+			             ->setPrice(500)
+			             ->parse($response->getBody());
 	    	         $this->em->persist($offer);
 	    	         $this->em->flush();
 	    	         $io->success('You have created a new offer.');
